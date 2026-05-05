@@ -20,7 +20,7 @@ const btnSubmit = document.getElementById('btn-submit');
 const toast = document.getElementById('toast');
 const toastMsg = document.getElementById('toast-msg');
 
-const WEBHOOK_URL = 'https://n8n.jayf4.shop/webhook-test/7fc61c6b-0e72-4284-84ce-9889ba02710c';
+const WEBHOOK_URL = 'https://web.jayf4.shop/webhook/7fc61c6b-0e72-4284-84ce-9889ba02710c';
 
 // ── Estado ─────────────────────────────────────
 let selectedFile = null;
