@@ -137,22 +137,26 @@ btnSubmit.addEventListener('click', async () => {
             description: description,
         };
 
+        // 1. Envia para o N8N — recebe o jobId
         const response = await fetch(WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload),
         });
 
-        if (!response.ok) throw new Error(`Erro ${response.status}`);
+        const { jobId } = await response.json();
 
-        showToast('Enviado com sucesso! 🎉', false);
-        resetForm();
+        // 2. Esconde o formulário, mostra o loading
+        document.querySelector('.card').style.display = 'none';
+        document.getElementById('loading-screen').style.display = 'flex';
+
+        // 3. Começa o polling
+        await pollJobStatus(jobId);
 
     } catch (error) {
-        console.error('Erro ao enviar:', error);
         showToast('Falha ao enviar. Tente novamente.', true);
-    } finally {
         setLoading(false);
+        document.querySelector('.card').style.display = 'block'; // ← garante que o form volte
     }
 });
 
@@ -212,4 +216,51 @@ function shakeFocus(fieldId) {
             field.style.transform = '';
         }
     }, 60);
+}
+
+async function pollJobStatus(jobId) {
+    const STATUS_URL = 'https://n8n.jayf4.shop/webhook/check-status';
+    const INTERVAL = 5000;
+    const MAX_TRIES = 36; // 36 × 5s = 3 minutos máximo
+    let tries = 0;
+
+    return new Promise((resolve, reject) => {
+        const timer = setInterval(async () => {
+            tries++;
+
+            if (tries > MAX_TRIES) {
+                clearInterval(timer);
+                document.getElementById('loading-screen').style.display = 'none';
+                document.querySelector('.card').style.display = 'block';
+                showToast('Tempo esgotado. Tente novamente.', true);
+                resolve();
+                return;
+            }
+
+            try {
+                const res = await fetch(`${STATUS_URL}?jobId=${jobId}`);
+                const data = await res.json();
+
+                if (data.status === 'done') {
+                    clearInterval(timer);
+                    showResults(data.images);
+                    resolve();
+                }
+            } catch (err) {
+                console.error('Erro no polling:', err);
+            }
+        }, INTERVAL);
+    });
+}
+
+function showResults(images) {
+    document.getElementById('loading-screen').style.display = 'none';
+
+    const resultsEl = document.getElementById('results-screen');
+    resultsEl.style.display = 'flex';
+
+    images.forEach((base64, index) => {
+        const img = document.getElementById(`result-img-${index + 1}`);
+        img.src = `data:image/png;base64,${base64}`;
+    });
 }
