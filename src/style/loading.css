@@ -1,4 +1,17 @@
-/* From Uiverse.io by 20essentials */
+#loading-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    background: #000;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 999;
+}
+
 .loader {
     --size: 250px;
     width: var(--size);
